@@ -43,3 +43,4 @@ userdata/
 
 build
 RealTimeCutVADCXXLibrary/Frameworks/*.xcframework
+cmake-build-debug
