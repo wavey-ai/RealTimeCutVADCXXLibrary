@@ -18,13 +18,13 @@ void RealTimeCutVAD::algorithm(float vadProbability, const std::vector<float_t>&
         aImpl->pre_audio_buffer.insert(aImpl->pre_audio_buffer.end(), sample.begin(), sample.end());
         size_t desired_size = sample.size() * this->voice_start_frame_count_threshold * 4;
         if (aImpl->pre_audio_buffer.size() >= desired_size) {
-            // 入力されたsample分のみ、PreAudioBufferから削除する。つまり、0.32s * 4 - 0.064s = 約1.216sのPreAudioBufferは確保されたままである
+            // 入力されたsample分のみ、PreAudioBufferから削除する。つまり、0.32s * 4 - 0.032s = 約1.248sのPreAudioBufferは確保されたままである
             aImpl->pre_audio_buffer.erase(aImpl->pre_audio_buffer.begin(), aImpl->pre_audio_buffer.begin() + sample.size());
         }
 
 //        std::cout << "pre_audio_buffer.size :" << aImpl->pre_audio_buffer.size() << std::endl;
 
-        if (aImpl->pre_vad_list.size() == this->voice_start_frame_count_threshold) {
+        if (aImpl->pre_vad_list.size() >= this->voice_start_frame_count_threshold) {
             if (aImpl->trueProbability(aImpl->pre_vad_list, this->voice_start_vad_true_ratio_threshold)) {
                 aImpl->audio_buffer.assign(aImpl->pre_audio_buffer.begin(), aImpl->pre_audio_buffer.end());
 
@@ -47,7 +47,7 @@ void RealTimeCutVAD::algorithm(float vadProbability, const std::vector<float_t>&
         aImpl->start_vad_list.push_back(is_speech);
         aImpl->audio_buffer.insert(aImpl->audio_buffer.end(), sample.begin(), sample.end());
 
-        if (aImpl->start_vad_list.size() == this->voice_end_frame_count_threshold) {
+        if (aImpl->start_vad_list.size() >= this->voice_end_frame_count_threshold) {
             if (aImpl->falseProbability(aImpl->start_vad_list, this->voice_end_vad_false_ratio_threshold)) {
 
                 // audioの秒数
