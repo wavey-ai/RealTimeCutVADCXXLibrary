@@ -7,10 +7,10 @@
 ## Features
 
 - **Real-time Voice Activity Detection (VAD)** using Silero models (v4 and v5)
-- **Real-time WAV generation with callback support** for seamless integration
 - **High-performance inference** with ONNX Runtime (C++)
 - **Advanced audio preprocessing** using WebRTC's APM (noise suppression, gain control, high-pass filtering)
 - **Accurate voice segmentation algorithms** implemented entirely in C++
+- **Real-time WAV generation with callback support** for seamless integration
 - **Cross-platform compatibility** through XCFramework
 
 ---
@@ -60,6 +60,93 @@ You can then integrate this XCFramework into your iOS or macOS projects.
 
 ---
 
+## Using the Library in C++
+
+Here's how you can utilize **RealTimeCutVADCXXLibrary** directly in your C++ projects for real-time voice activity detection and WAV file generation.
+
+### Example Code
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <sndfile.h>
+#include <thread>
+#include <fstream>
+#include "realtime_cut_vad.h"
+
+std::string time_str() {
+    auto now = std::chrono::system_clock::now();
+    auto now_as_time_t = std::chrono::system_clock::to_time_t(now);
+    auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+    auto epoch = now_ms.time_since_epoch();
+    auto value = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
+    long duration = value.count() % 1000;
+
+    std::tm tm = *std::localtime(&now_as_time_t);
+    char buffer[32];
+    std::strftime(buffer, sizeof(buffer), "%Y%m%d%H%M%S", &tm);
+
+    std::ostringstream oss;
+    oss << buffer << std::setw(3) << std::setfill('0') << duration;
+    return oss.str();
+}
+
+void voiceStartCallback(void* context) {
+    std::cout << "Voice recording started" << std::endl;
+}
+
+void voiceEndCallback(void* context, const uint8_t* wav_data, size_t wav_size) {
+    std::cout << "Voice recording ended" << std::endl;
+    auto filename = std::string(PROJECT_ROOT_DIR) + "/test_data/" + "recording_" + time_str() + ".wav";
+    std::ofstream outfile(filename, std::ios::binary);
+    outfile.write(reinterpret_cast<const char*>(wav_data), wav_size);
+    outfile.close();
+    std::cout << "Saved WAV file: " << filename << std::endl;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc < 4) {
+        std::cerr << "Usage: " << argv[0] << " <onnx model file> <Sample Rate> <wav file>" << std::endl;
+        return 1;
+    }
+
+    SF_INFO sfinfo;
+    SNDFILE *infile = sf_open(argv[3], SFM_READ, &sfinfo);
+    if (!infile) {
+        std::cerr << "Failed to open file: " << argv[3] << std::endl;
+        return 1;
+    }
+
+    std::vector<float> input(sfinfo.frames * sfinfo.channels);
+    sf_read_float(infile, input.data(), sfinfo.frames * sfinfo.channels);
+    sf_close(infile);
+
+    RealTimeCutVAD *vad = new RealTimeCutVAD();
+
+    switch (std::atoi(argv[2])) {
+        case 8000: vad->setSampleRate(K_8); break;
+        case 16000: vad->setSampleRate(K_16); break;
+        case 24000: vad->setSampleRate(K_24); break;
+        case 48000: vad->setSampleRate(K_48); break;
+        default: return 1;
+    }
+
+    vad->setCallback(nullptr, voiceStartCallback, voiceEndCallback);
+    vad->setModel(V4, std::string(argv[1]));
+    vad->process(input);
+
+    delete vad;
+    return 0;
+}
+```
+
+### Explanation
+- **Initialization**: The library initializes the VAD model and sets up the audio processing environment.
+- **Callbacks**: The `voiceStartCallback` and `voiceEndCallback` handle the start and end of detected voice activity.
+- **Real-Time Processing**: The input WAV file is processed in real-time, and detected voice segments are saved as separate WAV files.
+
+---
+
 ## Algorithm Explanation
 
 ### ONNX Runtime for Silero VAD
@@ -76,7 +163,7 @@ WebRTC's APM is used for:
 ### Audio Processing Workflow
 
 1. **Input Audio Configuration**: Supports sample rates of 8 kHz, 16 kHz, 24 kHz, and 48 kHz.
-2. **Audio Preprocessing**: 
+2. **Audio Preprocessing**:
    - Audio is split into chunks and processed with APM.
    - Audio is converted to 16 kHz for compatibility with Silero VAD.
 3. **Voice Activity Detection**:
