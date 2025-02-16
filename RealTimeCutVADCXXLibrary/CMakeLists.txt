@@ -82,5 +82,35 @@ if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
             RUNTIME DESTINATION VAD_FILE_COMMAND_build
     )
 
+endif()
+
+
+if(ANDROID)
+
+    message(STATUS "Building for Android")
+
+    set(ONNX_RUNTIME_LIBRARY "${PROJECT_SOURCE_DIR}/jniLibs/${ANDROID_ABI}/libonnxruntime.so")
+    set(ONNX_RUNTIME_INCLUDE "${PROJECT_SOURCE_DIR}/Frameworks/onnxruntime.xcframework/macos-arm64_x86_64/onnxruntime.framework/Headers")
+    set(WEBRTC_AUDIO_PROCESSING_LIBRARY "${PROJECT_SOURCE_DIR}/jniLibs/${ANDROID_ABI}/libwebrtc-audio-processing-1.so")
+    set(WEBRTC_AUDIO_PROCESSING_INCLUDE "${PROJECT_SOURCE_DIR}/Frameworks/webrtc_audio_processing.xcframework/macos-arm64_x86_64/webrtc_audio_processing.framework/Headers/webrtc-audio-processing-1")
+    set(WEBRTC_ABSL_INCLUDE "${PROJECT_SOURCE_DIR}/Frameworks/webrtc_audio_processing.xcframework/macos-arm64_x86_64/webrtc_audio_processing.framework/Headers")
+
+    # Create a shared library for Android
+    add_library(RealtimeCutVadLibrary SHARED ${SOURCE_FILES})
+
+    # Include directories
+    target_include_directories(RealtimeCutVadLibrary PRIVATE
+            ${PROJECT_SOURCE_DIR}
+            ${ONNX_RUNTIME_INCLUDE}
+            ${WEBRTC_AUDIO_PROCESSING_INCLUDE}
+            ${WEBRTC_ABSL_INCLUDE}
+    )
+
+    target_link_libraries(RealtimeCutVadLibrary
+            android
+            log
+            ${ONNX_RUNTIME_LIBRARY}
+            ${WEBRTC_AUDIO_PROCESSING_LIBRARY}
+    )
 
 endif()
