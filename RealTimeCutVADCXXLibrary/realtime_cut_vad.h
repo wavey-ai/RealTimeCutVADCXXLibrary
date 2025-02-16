@@ -84,12 +84,12 @@ private:
     int voice_end_frame_count_threshold;
 
     class ProcessImpl;
-    ProcessImpl* pImpl;
+    std::unique_ptr<ProcessImpl> pImpl;
 
     class AlgorithmImpl;
-    AlgorithmImpl* aImpl;
+    std::unique_ptr<AlgorithmImpl> aImpl;
 
-    ISileroVAD* sImpl;
+    std::unique_ptr<ISileroVAD> sImpl;
 
     void algorithm(float vadProbability, const std::vector<float_t>& sample);
 

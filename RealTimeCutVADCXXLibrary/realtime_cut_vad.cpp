@@ -10,13 +10,10 @@
 
 
 RealTimeCutVAD::RealTimeCutVAD() {
-    pImpl = new ProcessImpl;
+    pImpl = std::make_unique<ProcessImpl>();
 
-    pImpl->apm = webrtc::AudioProcessingBuilder().Create();
     webrtc::AudioProcessing::Config config;
-
     config.echo_canceller.enabled = false;
-
     config.gain_controller1.enabled = true;
     config.gain_controller1.mode = webrtc::AudioProcessing::Config::GainController1::kAdaptiveDigital;
     config.gain_controller2.enabled = true;
@@ -27,7 +24,7 @@ RealTimeCutVAD::RealTimeCutVAD() {
     pImpl->apm->ApplyConfig(config);
     pImpl->apm->Initialize();
 
-    aImpl = new AlgorithmImpl;
+    aImpl = std::make_unique<AlgorithmImpl>();
     aImpl->resetVariables();
 
     this->vad_start_detection_probability_threshold = SAMPLE_VAD_START_DETECTION_PROBABILITY_THRESHOLD;
@@ -40,10 +37,9 @@ RealTimeCutVAD::RealTimeCutVAD() {
 }
 
 RealTimeCutVAD::~RealTimeCutVAD() {
-    delete pImpl->apm;
-    delete pImpl;
-    delete aImpl;
-    delete sImpl;
+    pImpl.reset();
+    aImpl.reset();
+    sImpl.reset();
 }
 
 void RealTimeCutVAD::setSampleRate(SAMPLE_RATE choice_sample_rate_param) {
@@ -88,16 +84,15 @@ void RealTimeCutVAD::setThreshold(float vad_start_detection_probability, float v
 void RealTimeCutVAD::setModel(SILERO_VER ver, const std::string& model_path){
     // 既存のオブジェクトを削除
     if (sImpl) {
-        delete sImpl;
-        sImpl = nullptr;
+        sImpl.reset();
     }
 
     switch (ver) {
         case V4:
-            sImpl = new SileroV4;
+            sImpl = std::make_unique<SileroV4>();
             break;
         case V5:
-            sImpl = new SileroV5;
+            sImpl = std::make_unique<SileroV5>();
             break;
         default:
             throw std::invalid_argument("Invalid SILERO_VER specified");

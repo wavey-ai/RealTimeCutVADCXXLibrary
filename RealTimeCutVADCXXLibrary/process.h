@@ -10,7 +10,10 @@
 
 
 struct RealTimeCutVAD::ProcessImpl {
-    webrtc::AudioProcessing* apm;
+    std::unique_ptr<webrtc::AudioProcessing> apm;
+    ProcessImpl()
+            : apm(webrtc::AudioProcessingBuilder().Create()) {}
+
     webrtc::StreamConfig inputConfig;
     webrtc::StreamConfig outputConfig;
     std::vector<float_t> remaining_audio_data_1;
