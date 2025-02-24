@@ -35,8 +35,6 @@ void RealTimeCutVAD::algorithm(float vadProbability, const std::vector<float_t>&
                     voice_start_callback(this->context);
                 }
 
-                std::cout << "Voice recording start!" << std::endl;
-
             } else {
                 aImpl->pre_vad_list.erase(aImpl->pre_vad_list.begin());
             }
@@ -59,8 +57,6 @@ void RealTimeCutVAD::algorithm(float vadProbability, const std::vector<float_t>&
 
                 aImpl->resetVariables();
                 sImpl->reset_hidden_layer_value();
-
-                std::cout << "Voice recording end!" << std::endl;
 
             } else {
                 aImpl->start_vad_list.erase(aImpl->start_vad_list.begin());

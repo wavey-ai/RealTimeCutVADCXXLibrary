@@ -7,7 +7,7 @@
 
 
 #include "realtime_cut_vad.h"
-#include <onnxruntime/onnxruntime_cxx_api.h>
+#include "../../onnxruntime/include/onnxruntime/core/session/onnxruntime_cxx_api.h"
 
 class RealTimeCutVAD::ISileroVAD {
 public:
